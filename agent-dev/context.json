@@ -1,0 +1,770 @@
+{
+  "meta": {
+    "page_title": "Task Forge v2 - Showcase",
+    "brand_title": "Task Forge v2",
+    "top_meta": "v2 · 试运行版本",
+    "description": "一个 Agent 工程项目：把真实生产代码自动转化为可复现、可分级的 Agent 基准评测任务，重点在 workflow 与确定性校准，不在证明某个单一模型最强。"
+  },
+  "page_hero": {
+    "eyebrow": "Agent 开发 · 评测工具链 · 个人项目",
+    "heading_html": "把真实开发脚本，<br/>自动转化为<span class=\"accent\">可复现</span>的 Agent 评测任务。",
+    "lede_html": "Task Forge v2 是一个基于 LLM 的多步骤编排系统。输入是一份真实开发场景中的 Python 脚本（<code>dev/code_source/dirty_work/*.py</code>），输出是一道经过 4 个独立 critic 对抗审查、并由确定性规则函数完成最终分级的 Agent 基准评测任务。<strong>当前模型层默认接 Mimo，但项目的主张不在某个模型本身，而在 workflow scaffolding、critic 审查与 deterministic calibration</strong>——一道任务是否被采纳为高质量 <code>anchor</code>，由一组明确的硬性条件决定，模型不参与最终判定。",
+    "caption_html": "术语统一：<code>anchor</code>（主锚任务，质量最高）／ <code>supporting</code>（辅助任务，可用但有上限）／ <code>reject</code>（拒绝，不进入评测集）。下文及分级标签均使用此三个英文 key。",
+    "stats": [
+      {
+        "value": "13",
+        "label": "主流程节点"
+      },
+      {
+        "value": "4",
+        "label": "对抗式 critic"
+      },
+      {
+        "value": "17",
+        "label": "完整 assessed runs"
+      },
+      {
+        "value": "10 / 7",
+        "label": "full review / fast path"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "id": "problem",
+      "nav_label": "Overview",
+      "kicker": "01 · 项目概述",
+      "title": "它解决的是 Agent 评测里\"题目从哪来\"的工程问题。",
+      "sub_html": "目前 Agent 评测圈的主流做法是用 LLM-as-judge 给 Agent 输出打分。这套做法在<strong>评测的可复现性</strong>上存在结构性问题：同一份输入，不同模型版本、不同温度、不同 prompt 会给出不同分数；同时优质的\"评测任务\"本身就是稀缺资源，需要人工产出。 Task Forge v2 的差异点是<strong>把最终分级移出模型层</strong>——LLM 只负责生成、审查与修订，任务最终是 <code>anchor</code> 还是 <code>reject</code> 由一条纯规则函数说了算，相同输入永远产出相同分级。这就让\"自动产出评测任务\"和\"评测任务的质量保证\"这两件事可以同时成立。",
+      "note_html": "它<strong>不是聊天机器人，也不是 RAG 应用</strong>（虽然内部有检索层）。下面三张卡片是项目的输入、中间层与输出。",
+      "blocks": [
+        {
+          "kind": "problem-cards",
+          "items": [
+            {
+              "title": "输入 · INPUT",
+              "body_html": "一份真实开发场景中的 Python 脚本，带真实的依赖、函数、文件路径与副作用。来源是开发者日常工作里产出的\"脏脚本\"——不是教科书例子，有真实工程上下文。"
+            },
+            {
+              "title": "中间层 · PIPELINE",
+              "body_html": "13 节点 LangGraph 状态机：源代码挖掘 → 历史任务检索 → 初判 → 草稿 → 4 critic 并行审查 → 修订合并 → 终稿 → 规范化 → 规则层评分 → 落盘。低价值来源走 6 节点快速路径。"
+            },
+            {
+              "title": "输出 · OUTPUT",
+              "body_html": "一道结构化的评测任务（JSON），含任务边界、规划粒度、可观察答案；以及一份 <code>anchor / supporting / reject</code> 三选一的最终分级与对应 reason codes。回归脚本可直接读取该分级。",
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arch",
+      "nav_label": "Architecture",
+      "kicker": "02 · 系统架构",
+      "title": "三层架构：模型、记忆、规则各司其职。",
+      "sub_html": "模型层负责生成与评判，记忆层负责跨轮次复用历史产物，规则层负责最终判定。各层通过结构化 schema 通信，避免自然语言层面的歧义传播。",
+      "blocks": [
+        {
+          "kind": "architecture",
+          "items": [
+            {
+              "num": "第一层",
+              "name": "模型层（Model）",
+              "body_html": "一个 LLM 客户端被 8 个 prompt 复用：triage、draft、4 个 critic、synthesize_review、curate。每个 prompt 都绑定对应的 Pydantic schema，模型必须按 schema 输出，否则进入 JSON 自修复流程。模型本身不掌握最终分级逻辑，每一步只回答当前节点的问题。",
+              "chips": [
+                "mimo-v2.5-pro",
+                "temperature 0.2",
+                "PydanticOutputParser",
+                "JSON 自修复"
+              ]
+            },
+            {
+              "num": "第二层",
+              "name": "记忆层（Memory）",
+              "body_html": "基于 LlamaIndex VectorStoreIndex，索引内容是<strong>系统在过去运行中自己产出的 artifact</strong>：源代码摘要、已审核任务、anchor 评估、critic 审查记录。检索采用三路并行（源代码主键、任务族邻居、任务形态邻居），随后按 family / shape 标签做后过滤。索引按 corpus signature 持久化在 <code>dev/.cache/retrieval_index/</code>，相同语料不会重复构建索引。",
+              "chips": [
+                "VectorStoreIndex",
+                "all-MiniLM-L6-v2",
+                "SentenceSplitter 700/120",
+                "语料签名缓存"
+              ]
+            },
+            {
+              "num": "第三层",
+              "name": "规则层（Rule）",
+              "body_html": "<code>assessment.py</code> 中的若干纯函数：<code>postprocess</code> 负责对任务边界、规划粒度、可执行性标记进行规范化；<code>assess_task</code> 按硬性条件完成最终分级。该层不调用任何模型——相同的输入永远输出相同的分级结果与 reason codes。这是项目相较于\"LLM-as-judge\"方案在可复现性上的核心差异点。",
+              "chips": [
+                "纯函数",
+                "确定性",
+                "reason codes",
+                "不调用 LLM"
+              ],
+              "deterministic": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "nav_label": "Pipeline",
+      "kicker": "03 · 工作流程",
+      "title": "主流程与快速拒绝路径，按预算分流。",
+      "sub_html": "流程中每一步都对应代码中同名函数。triage 之后分两条路径：通过审查的源代码进入 13 步主流程；判定为 reject 的源代码进入 6 步快速路径，跳过 critic 阶段以节约预算。",
+      "blocks": [
+        {
+          "kind": "pipeline",
+          "lanes": [
+            {
+              "id": "main",
+              "label": "主流程 · 13 步",
+              "active": true,
+              "phases": [
+                {
+                  "label": "阶段 A · 源代码采集",
+                  "layout": "row",
+                  "steps": [
+                    {
+                      "ix": "01",
+                      "name": "mine_source",
+                      "what": "读取源脚本，抽取依赖、函数、路径、风险标签。"
+                    },
+                    {
+                      "ix": "02",
+                      "name": "retrieve_context",
+                      "what": "按任务族检索历史任务、报告与产物。"
+                    },
+                    {
+                      "ix": "03",
+                      "name": "triage_source",
+                      "what": "判断源代码是否值得继续投入预算：anchor / supporting / reject 三类初判。"
+                    }
+                  ]
+                },
+                {
+                  "label": "阶段 B · 任务草稿生成",
+                  "layout": "row",
+                  "steps": [
+                    {
+                      "ix": "04",
+                      "name": "draft_task",
+                      "what": "由 LLM 产出第一版任务草稿。"
+                    }
+                  ]
+                },
+                {
+                  "label": "阶段 C · 对抗式审查（4 个 critic 并行）",
+                  "layout": "critic",
+                  "steps": [
+                    {
+                      "ix": "05",
+                      "name": "boundary_critic",
+                      "what": "检查任务是否超出\"单一决策\"的范围。",
+                      "critic": true
+                    },
+                    {
+                      "ix": "06",
+                      "name": "leakage_critic",
+                      "what": "检查答案是否在题面或上下文中已被泄露。",
+                      "critic": true
+                    },
+                    {
+                      "ix": "07",
+                      "name": "scope_critic",
+                      "what": "检查任务是否退化为静态代码审查题。",
+                      "critic": true
+                    },
+                    {
+                      "ix": "08",
+                      "name": "harness_critic",
+                      "what": "检查评测环境是否能真正观测到答案。",
+                      "critic": true
+                    }
+                  ],
+                  "followup_steps": [
+                    {
+                      "ix": "09",
+                      "name": "synthesize_review",
+                      "what": "汇总 4 个 critic 的反馈，形成可执行的修订方案。"
+                    },
+                    {
+                      "ix": "10",
+                      "name": "curate_task",
+                      "what": "curator 按修订方案产出最终任务版本。"
+                    }
+                  ]
+                },
+                {
+                  "label": "阶段 D · 校准与产出",
+                  "layout": "row",
+                  "steps": [
+                    {
+                      "ix": "11",
+                      "name": "postprocess",
+                      "what": "规范化任务边界、规划粒度、可执行性标记。",
+                      "deterministic": true
+                    },
+                    {
+                      "ix": "12",
+                      "name": "assess_task",
+                      "what": "规则层按硬性条件完成最终分级，模型不参与。",
+                      "deterministic": true
+                    },
+                    {
+                      "ix": "13",
+                      "name": "emit_artifacts",
+                      "what": "输出 JSON artifact，供下一轮 retrieve_context 复用。",
+                      "deterministic": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "fast",
+              "label": "快速拒绝路径 · 6 步",
+              "note_html": "// 主流程约 8 次模型调用；快速路径约 1 次。",
+              "phases": [
+                {
+                  "label": "快速拒绝路径 · 跳过 critic 循环",
+                  "layout": "row",
+                  "steps": [
+                    {
+                      "ix": "01",
+                      "name": "mine_source",
+                      "what": "与主流程一致。"
+                    },
+                    {
+                      "ix": "02",
+                      "name": "retrieve_context",
+                      "what": "与主流程一致，检索结果保留作为拒绝证据。"
+                    },
+                    {
+                      "ix": "03",
+                      "name": "triage_source",
+                      "what": "判定为 reject，跳过 critic 阶段。"
+                    },
+                    {
+                      "ix": "04",
+                      "name": "curate_reject_seed",
+                      "what": "不调用 critic，直接基于源代码与初判结果固化拒绝条目。"
+                    },
+                    {
+                      "ix": "05",
+                      "name": "assess_task",
+                      "what": "规则层确认拒绝原因。",
+                      "deterministic": true
+                    },
+                    {
+                      "ix": "06",
+                      "name": "emit_artifacts",
+                      "what": "输出拒绝条目 artifact。",
+                      "deterministic": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rubric",
+      "nav_label": "Rubric",
+      "kicker": "04 · 评分规则",
+      "title": "最终分级由确定性判定树决定。",
+      "sub_html": "<code>assess_task</code> 是纯规则函数。输入为源代码摘要、已审核任务、质量标记、初判结果；输出为最终分级与 reason codes。下方四道闸门按顺序执行。",
+      "blocks": [
+        {
+          "kind": "decision-tree",
+          "gates": [
+            {
+              "num": "闸门 1",
+              "title": "直接拒绝",
+              "conditions": [
+                "质量标记包含 <strong>reject_seed</strong>（来源信息过弱，无法构题）",
+                "校验器报错列表非空（任务字段缺失或不一致）",
+                "初判结果为 <strong>reject</strong>"
+              ],
+              "outcomes": [
+                {
+                  "text": "任一命中",
+                  "arrow": "→",
+                  "pill": {
+                    "label": "reject",
+                    "tone": "reject"
+                  }
+                },
+                {
+                  "text": "全部不命中",
+                  "arrow": "↓"
+                }
+              ],
+              "conditions_html": [
+                "质量标记包含 <strong>reject_seed</strong>（来源信息过弱，无法构题）",
+                "校验器报错列表非空（任务字段缺失或不一致）",
+                "初判结果为 <strong>reject</strong>"
+              ]
+            },
+            {
+              "num": "闸门 2",
+              "title": "静态审查上限",
+              "conditions": [
+                "任务形态为 <strong>静态代码审查类</strong>（让 Agent 阅读、解释、找问题，但不真正执行）",
+                "→ 无函数、无依赖、无代码片段：不可作为 supporting",
+                "→ 含代码证据：仅可作为 supporting，不可升级为 anchor"
+              ],
+              "outcomes": [
+                {
+                  "text": "弱静态审查",
+                  "arrow": "→",
+                  "pill": {
+                    "label": "reject",
+                    "tone": "reject"
+                  }
+                },
+                {
+                  "text": "有代码证据",
+                  "arrow": "→",
+                  "pill": {
+                    "label": "supporting",
+                    "tone": "support"
+                  }
+                },
+                {
+                  "text": "非静态审查",
+                  "arrow": "↓"
+                }
+              ],
+              "conditions_html": [
+                "任务形态为 <strong>静态代码审查类</strong>（让 Agent 阅读、解释、找问题，但不真正执行）",
+                "→ 无函数、无依赖、无代码片段：不可作为 supporting",
+                "→ 含代码证据：仅可作为 supporting，不可升级为 anchor"
+              ]
+            },
+            {
+              "num": "闸门 3",
+              "title": "anchor 资格（全部满足才通过）",
+              "conditions": [
+                "任务形态为真实工作流（非空想题、非纯解释题）",
+                "边界单一 + 产物可观察（评测能验真）",
+                "规划粒度非泛化决策（不是\"看情况办\"）",
+                "动词为可执行类：move / promote / link / emit / write / ledger / execute / mutate",
+                "风险类别 ∈ { 文件移动、归档清理、文件链接、Schema 输出 }"
+              ],
+              "outcomes": [
+                {
+                  "text": "全部满足",
+                  "arrow": "→",
+                  "pill": {
+                    "label": "anchor",
+                    "tone": "anchor"
+                  }
+                },
+                {
+                  "text": "任一缺失",
+                  "arrow": "↓"
+                }
+              ],
+              "conditions_html": [
+                "任务形态为真实工作流（非空想题、非纯解释题）",
+                "边界单一 + 产物可观察（评测能验真）",
+                "规划粒度非泛化决策（不是\"看情况办\"）",
+                "动词为可执行类：move / promote / link / emit / write / ledger / execute / mutate",
+                "风险类别 ∈ { 文件移动、归档清理、文件链接、Schema 输出 }"
+              ]
+            },
+            {
+              "num": "默认",
+              "title": "兜底分级",
+              "conditions": [
+                "未触发拒绝，亦未达成 anchor 全部条件。任务可用，但不会被算作高质量主锚。"
+              ],
+              "outcomes": [
+                {
+                  "arrow": "→",
+                  "pill": {
+                    "label": "supporting",
+                    "tone": "support"
+                  }
+                }
+              ],
+              "terminal": true,
+              "conditions_html": [
+                "未触发拒绝，亦未达成 anchor 全部条件。任务可用，但不会被算作高质量主锚。"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "samples",
+      "nav_label": "Samples",
+      "kicker": "05 · 样本展示",
+      "title": "三份真实脚本，跑出三种分级。",
+      "sub_html": "系统的价值在于<strong>区分三类来源</strong>：值得花预算认真审查的高质量种子、能用但有上限的辅助来源、不该进入完整流程的低价值来源。当前 artifact audit 覆盖 `33` 个 artifact 目录、`17` 个完整 assessed runs；下面展示的是其中最有代表性的三类样本。",
+      "note_html": "<strong>当前证据快照：</strong>`17` 个完整 assessed runs 里，`10` 个走 full-review 路径、`7` 个走 fast-path reject。`binary_and_dialation_try.py` 目前是稳定 supporting；`CXR_14_process.py` 反复 reject；`compress.py` 已多次进入 anchor，但仍有少量 supporting / reject 漂移，说明 critic 与 retrieval 仍在校准。",
+      "blocks": [
+        {
+          "kind": "samples",
+          "items": [
+            {
+              "file": "compress.py",
+              "verdict": {
+                "label": "anchor",
+                "tone": "anchor"
+              },
+              "rows": [
+                {
+                  "key": "任务族",
+                  "value": "archive_cleanup（归档清理）"
+                },
+                {
+                  "key": "规划粒度",
+                  "value": "single archive cleanup eligibility decision"
+                }
+              ],
+              "why_html": "<strong>判定逻辑：</strong>脚本会先把 tar 包解压、校验切分结果，然后才删除原归档——存在真实文件 IO 副作用，边界单一（\"是否可以删原包\"），评测时可通过观察文件系统验真。闸门 3 全部命中。",
+              "reason_codes": [
+                {
+                  "label": "workflow_grounded_shape",
+                  "tone": "pos"
+                },
+                {
+                  "label": "single_boundary",
+                  "tone": "pos"
+                },
+                {
+                  "label": "artifact_ready",
+                  "tone": "pos"
+                },
+                {
+                  "label": "harness_observes_boundary",
+                  "tone": "pos"
+                },
+                {
+                  "label": "specific_planning_unit",
+                  "tone": "pos"
+                },
+                {
+                  "label": "execution_observable_answer",
+                  "tone": "pos"
+                }
+              ]
+            },
+            {
+              "file": "binary_and_dialation_try.py",
+              "verdict": {
+                "label": "supporting",
+                "tone": "support"
+              },
+              "rows": [
+                {
+                  "key": "任务族",
+                  "value": "医学影像处理（类静态审查）"
+                },
+                {
+                  "key": "规划粒度",
+                  "value": "single bounded workflow decision"
+                }
+              ],
+              "why_html": "<strong>判定逻辑：</strong>含真实 numpy / scipy.ndimage 代码可读，但生成的题目容易退化为\"看代码找问题\"的静态审查形态，并且涉及多个失败域（IO + 数组操作 + 错误处理）。闸门 2 把它压在 supporting 上限——可用作辅助样本，不能算 anchor。",
+              "reason_codes": [
+                {
+                  "label": "static_review_shape",
+                  "tone": "warn"
+                },
+                {
+                  "label": "not_execution_grounded",
+                  "tone": "neg"
+                }
+              ]
+            },
+            {
+              "file": "CXR_14_process.py",
+              "verdict": {
+                "label": "reject",
+                "tone": "reject"
+              },
+              "rows": [
+                {
+                  "key": "任务族",
+                  "value": "无效种子（reject_seed）"
+                },
+                {
+                  "key": "规划粒度",
+                  "value": "single source admissibility decision"
+                }
+              ],
+              "why_html": "<strong>判定逻辑：</strong>脚本几乎不含函数与依赖，主体仅为路径声明——可以\"看出\"是某种数据准备脚本，但抽不出具体可评测边界。初判即判 reject，跳过 4 个 critic，走快速路径。这是系统避免浪费预算的关键场景。",
+              "reason_codes": [
+                {
+                  "label": "reject_seed",
+                  "tone": "neg"
+                },
+                {
+                  "label": "source_triage_reject",
+                  "tone": "neg"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "nav_label": "Evidence",
+      "kicker": "06 · 证据层",
+      "title": "现在已经有一层可审计的证据，不只是流程图。",
+      "sub_html": "这一层证据现在来自四部分：只读 artifact audit、runtime telemetry、critic ablation、以及一个最小 `haiku vs qwen` validity probe。它们一起决定现在能说什么、还不能说什么。",
+      "note_html": "对应文档：<code>dev/report/task_forge_artifact_audit.md</code>、<code>dev/report/task_forge_ablation_report.md</code>、<code>dev/report/task_forge_validity_probe.md</code> 与 <code>dev/report/task_forge_reuse_inventory.md</code>。",
+      "blocks": [
+        {
+          "kind": "feature-cards",
+          "items": [
+            {
+              "num": "01",
+              "title": "当前 artifact audit",
+              "body_html": "`dev/artifacts` 现有 `33` 个 artifact 目录，其中 `17` 个是完整 assessed runs。最终桶位分布是 `4 anchor / 4 supporting / 9 reject`；评审路径分布是 `10 full review / 7 fast path`。这已经足够证明三类最终桶与早拒绝路径都真实出现过。"
+            },
+        {
+          "num": "02",
+          "title": "runtime telemetry 与 ablation",
+          "body_html": "当前 `4-source x 2-variant` ablation 已完成：`full_review` 与 `no_critics` 都得到 `2 anchor / 1 supporting / 1 reject`，但成本差异明显。平均 `llm_call_count` 从 `6.25` 降到 `2.5`，平均时长从 `43.63s` 降到 `25.01s`。这说明 critic 路径现在的价值更像 trace richness，而不是已经证明会改变最终桶位。"
+        },
+        {
+          "num": "03",
+          "title": "主 eval 项目的可复用资产",
+          "body_html": "主项目已经有完整的 canonical surfaces：`144` 个 Chat cells、`96` 个 CLI cells、`72` 个 Task 2 handoff cells，以及配套的 manual rubric、judge disagreement、source-run audit 与 failure taxonomy。Task Forge 可以直接复用这套 audit 结构和 `hard anchor / soft support / counterexample` 的叙事方式。"
+        },
+        {
+          "num": "04",
+          "title": "当前 validity read",
+          "body_html": "更大的 `12-task` validity sweep 已完成，比较模型仍是 `haiku` vs `qwen`。当前方向性结论是：`reject` 桶比较成立，但 `anchor > supporting` 仍是 mixed evidence，尤其 `compress.py` 这条 archive-cleanup 线出现明显漂移。Task Forge 已据此新增 `runtime_verification_underdefined` 规则，并把新 rerun 的 `compress.py` 从 anchor 压回 supporting。也就是说，这套系统现在不只会出题，还会根据外部 validity 证据收紧自己的 deterministic rubric。"
+        }
+      ]
+    }
+  ]
+    },
+    {
+      "id": "why",
+      "nav_label": "Highlights",
+      "kicker": "07 · 工程亮点",
+      "title": "项目体现的 Agent 工程实践。",
+      "sub_html": "下列六个设计选择构成了项目作为 Agent 工程作品的核心价值。",
+      "blocks": [
+        {
+          "kind": "feature-cards",
+          "items": [
+            {
+              "num": "01",
+              "title": "多步骤编排",
+              "body_html": "采用 13 节点 LangGraph 状态机：<code>triage → draft → 4 critics 并行 → synthesize → curate → assess</code>。每个节点的输入输出都已 schema 化，可独立单测，也可单独重放。"
+            },
+            {
+              "num": "02",
+              "title": "多 critic 对抗式审查",
+              "body_html": "4 个 critic 分别覆盖一类失败模式（边界、泄露、范围、评测可观测性），由 <code>synthesize_review</code> 节点合并为统一的修订方案。每个 critic 的偏好可通过替换其 prompt 单独调整。"
+            },
+            {
+              "num": "03",
+              "title": "持久化记忆层",
+              "body_html": "每轮运行都消费上一轮的 artifact。LlamaIndex 持久化索引按语料签名缓存——相同语料不会重复嵌入。任务本身无需感知历史，但系统会自动避免与历史任务重叠。"
+            },
+            {
+              "num": "04",
+              "title": "确定性评分",
+              "body_html": "项目的核心论点：anchor 资格并非由 LLM 投票决定，而是由 <code>assess_task</code> 纯函数依据多个硬性条件判定。相同输入永远产生相同输出，这是评测工程可复现性的基础要求。"
+            },
+            {
+              "num": "05",
+              "title": "预算感知的路由策略",
+              "body_html": "并非每份源代码都值得 8 次模型调用。初判后通过 <code>add_conditional_edges</code> 分流：低价值来源走 6 步快速路径，仅消耗一次模型调用即可完成。这是评测工具中常被忽视的成本意识体现。"
+            },
+            {
+              "num": "06",
+              "title": "结构化输出规范",
+              "body_html": "每个节点的 LLM 输出均由 Pydantic 模型定型，失败时进入 JSON 自修复，再次失败才抛出异常。状态合并使用 <code>Annotated[..., operator.add]</code>，避免字符串拼接。失败信息能精确定位到具体 schema 字段，便于排查与回归。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack",
+      "nav_label": "Stack",
+      "kicker": "08 · 技术栈",
+      "title": "基于成熟工具按职责组合。",
+      "sub_html": "不重复造轮子：LangGraph 负责编排，LlamaIndex 负责记忆，Pydantic 负责结构化输出，Mimo 作为模型层。",
+      "blocks": [
+        {
+          "kind": "stack",
+          "cards": [
+            {
+              "title": "模型层",
+              "num": "01",
+              "items": [
+                "小米 Mimo <code>mimo-v2.5-pro</code>",
+                "OpenAI 兼容端点",
+                "<code>langchain-openai</code> ChatOpenAI",
+                "temperature 0.2 / 最大 12000 tokens",
+                "调用间隔 10s（速率限制）"
+              ],
+              "items_html": [
+                "小米 Mimo <code>mimo-v2.5-pro</code>",
+                "OpenAI 兼容端点",
+                "<code>langchain-openai</code> ChatOpenAI",
+                "temperature 0.2 / 最大 12000 tokens",
+                "调用间隔 10s（速率限制）"
+              ]
+            },
+            {
+              "title": "编排层",
+              "num": "02",
+              "items": [
+                "<code>langgraph.StateGraph</code>",
+                "13 节点，含 4 critics 并行",
+                "初判后通过 <code>add_conditional_edges</code> 分流",
+                "<code>InMemorySaver</code> 检查点",
+                "状态合并使用 <code>Annotated[..., operator.add]</code>"
+              ],
+              "items_html": [
+                "<code>langgraph.StateGraph</code>",
+                "13 节点，含 4 critics 并行",
+                "初判后通过 <code>add_conditional_edges</code> 分流",
+                "<code>InMemorySaver</code> 检查点",
+                "状态合并使用 <code>Annotated[..., operator.add]</code>"
+              ]
+            },
+            {
+              "title": "记忆层",
+              "num": "03",
+              "items": [
+                "LlamaIndex <code>VectorStoreIndex</code>",
+                "嵌入模型 <code>all-MiniLM-L6-v2</code>",
+                "SentenceSplitter，块 700 / 重叠 120",
+                "三路检索 + 任务族 / 形态后过滤",
+                "按语料签名持久化于 <code>dev/.cache/retrieval_index/</code>"
+              ],
+              "items_html": [
+                "LlamaIndex <code>VectorStoreIndex</code>",
+                "嵌入模型 <code>all-MiniLM-L6-v2</code>",
+                "SentenceSplitter，块 700 / 重叠 120",
+                "三路检索 + 任务族 / 形态后过滤",
+                "按语料签名持久化于 <code>dev/.cache/retrieval_index/</code>"
+              ]
+            },
+            {
+              "title": "结构化输出",
+              "num": "04",
+              "items": [
+                "每个节点对应一个 Pydantic v2 模型",
+                "<code>PydanticOutputParser</code> 强制 JSON 输出",
+                "失败时进入 JSON 自修复",
+                "schema 与 prompt 一处变更",
+                "异常可精确定位到字段"
+              ],
+              "items_html": [
+                "每个节点对应一个 Pydantic v2 模型",
+                "<code>PydanticOutputParser</code> 强制 JSON 输出",
+                "失败时进入 JSON 自修复",
+                "schema 与 prompt 一处变更",
+                "异常可精确定位到字段"
+              ]
+            },
+            {
+              "title": "规则层",
+              "num": "05",
+              "items": [
+                "<code>assessment.py</code> 纯函数",
+                "<code>postprocess</code> 完成规范化",
+                "<code>assess_task</code> 多闸门判定",
+                "不调用任何模型",
+                "相同输入恒等输出"
+              ],
+              "items_html": [
+                "<code>assessment.py</code> 纯函数",
+                "<code>postprocess</code> 完成规范化",
+                "<code>assess_task</code> 多闸门判定",
+                "不调用任何模型",
+                "相同输入恒等输出"
+              ]
+            },
+            {
+              "title": "运行环境",
+              "num": "06",
+              "items": [
+                "Python 3.13",
+                "pytest 单元 / 集成测试",
+                "无 UI，离线批处理",
+                "所有 artifact 以 JSON 落盘至 <code>dev/artifacts/</code>",
+                "回归脚本读取 anchor_assessment.json"
+              ],
+              "items_html": [
+                "Python 3.13",
+                "pytest 单元 / 集成测试",
+                "无 UI，离线批处理",
+                "所有 artifact 以 JSON 落盘至 <code>dev/artifacts/</code>",
+                "回归脚本读取 anchor_assessment.json"
+              ]
+            }
+          ],
+          "versions_label": "依赖锁定 · requirements.txt ·",
+          "versions": [
+            "langgraph 1.1.10",
+            "langchain-core 1.3.3",
+            "langchain-openai 1.2.1",
+            "llama-index-core 0.14.21",
+            "pydantic 2.13.4",
+            "sentence-transformers 5.4.1",
+            "openai 2.36.0",
+            "pytest 9.0.3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "nav_label": "Artifacts",
+      "kicker": "09 · 单次运行产物",
+      "title": "每处理一份源代码后落盘的 JSON 文件。",
+      "sub_html": "所有产物都会被下一轮 <code>retrieve_context</code> 直接消费，形成系统的长期记忆。",
+      "tight": true,
+      "blocks": [
+        {
+          "kind": "artifacts",
+          "items": [
+            {
+              "file": "source_summary.json",
+              "desc": "依赖、函数、路径、风险标签、使用策略提示等源代码摘要信息。"
+            },
+            {
+              "file": "retrieval_hits.json",
+              "desc": "基于任务族的历史片段命中结果，含相似度与族标签。"
+            },
+            {
+              "file": "source_triage.json",
+              "desc": "初判结论、置信度与引用证据；快速拒绝路径的入口。"
+            },
+            {
+              "file": "curated_task.json",
+              "desc": "经 4 个 critic 审查与合并修订后的最终任务版本。"
+            },
+            {
+              "file": "anchor_assessment.json",
+              "desc": "最终分级与全部 reason codes——回归脚本读取的主要文件。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footer": {
+    "left_html": "个人项目 · 试运行阶段 · <code>github.com/Agaresd47/Agent_info_flow_study</code>",
+    "right_html": "方向：<strong>Agent 开发与评测</strong>"
+  }
+}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agent 边界处理能力评测</title>
+<title>文件 / CLI / 委派类 Agent 的边界纪律评测</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -515,7 +515,7 @@
 </div>
 </div>
 <section id="page-intro" class="section">
-<h1 class="section-title">Agent 边界处理能力评测</h1>
+<h1 class="section-title">文件 / CLI / 委派类 Agent 的边界纪律评测</h1>
 <p class="section-subtitle">评测模型在信息不完整、边界未确认时的工程判断力，重点看它会不会主动澄清和查证，而不是把空白补成默认事实往下做。涵盖纯问答、CLI 执行、planner-worker 交接三类场景。</p>
 </section>
 <section id="summary-task-outline-zh" class="section">
@@ -524,14 +524,14 @@
 <p class="body-copy prose-gap">信息缺口处理评测：模型拿到信息留有缺口的任务时，会不会先把边界问清楚、查清楚，再决定继续执行。6 道任务，4 种信息条件。</p>
 <p class="body-copy prose-gap">CLI 执行评测：模型有真实 shell 执行权限时，会不会守住 inspect → dry-run → approve → execute → verify 闭环。4 道任务，4 种权限条件。</p>
 <p class="body-copy prose-gap">任务委派评测：planner-worker 交接里，边界会不会被写坏或在复核里修回来。6 道任务，2 种提示条件，每题跑 planner_v1 → worker_v1 → planner_v2 → worker_v2 四步。</p>
-<p class="body-copy prose-gap">题目改写自我自己科研里的真实任务（模型训练数据的 pair 整理、他人数据结构的修改等），rubric 直接沿用我作为操作者的实际判断标准。实验设置：被测模型 temperature 0.2、max_tokens 6000、seed 42；judge 为 GPT-5.4 mini，temperature 0.2、max_tokens 5000；每个 cell 跑 4 次取均值。0.5–1 分级别的差距视作同档、不作为强排序结论；下一版会通过多 judge 投票和人工盲审进一步降噪。</p>
+<p class="body-copy prose-gap">题目改写自我自己科研里的真实任务（模型训练数据的 pair 整理、他人数据结构的修改等），rubric 直接沿用我作为操作者的实际判断标准。实验设置：被测模型 temperature 0.2、max_tokens 6000、seed 42；judge 为 GPT-5.4 mini，temperature 0.2、max_tokens 5000；每个 cell 跑 4 次取均值。当前打分流程是 LLM judge + 作者人工复核，部分 cell 有 manual adjustment 用于修正 judge 明显误判；下一版会补多 judge 投票、人工盲审和逐步评分进一步降噪。0.5–1 分级别的差距视作同档、不作为强排序结论。</p>
 </section>
 <section id="summary-questions-zh" class="section">
 <h3 class="sub-title">这套评测主要回答 5 个问题</h3>
 <div class="result-grid">
 <div class="result-card">
 <h4>1. 大模型 / 大激活的收益？</h4>
-<p>6 个模型横向看不出强相关。在信息缺口处理评测下，21B 估算激活的 Haiku 优于 42B 激活的 MiMo；同为 3B 量级激活的 GLM 优于 Qwen Coder。差距更多落在训练质量、对指定规则的忠实执行、以及流程纪律上，参数体量在这次样本里没看出明显梯度。</p>
+<p>当前样本里没看到参数规模与得分的稳定正相关。信息缺口处理评测下，21B 估算激活的 Haiku 优于 42B 激活的 MiMo；同为 3B 量级激活的 GLM 优于 Qwen Coder。差异更可能落在训练质量、对指定规则的忠实执行、以及流程纪律上，参数体量在这次样本里没看出明显梯度。</p>
 </div>
 <div class="result-card">
 <h4>2. 加任务提示和行为 guardrail 分别有什么用？</h4>
@@ -729,7 +729,7 @@
 </section>
 <section id="chat-task_summary-zh" class="section">
 <h3 class="sub-title">结果解读</h3>
-<p class="body-copy prose-gap">评测结果跟模型参数规模没有明显对应关系。Haiku 估算 21B 激活参数拿到 24.1 分，MiMo 42B 激活、1T 总参数只有 18.7 分；GLM 和 Qwen 激活参数都在 3B 量级，分数却差出 5 分以上。差距出在训练，不在参数。</p>
+<p class="body-copy prose-gap">当前样本里没看到参数规模和分数的稳定对应。Haiku 估算 21B 激活参数拿到 24.1 分，MiMo 42B 激活、1T 总参数只有 18.7 分；GLM 和 Qwen 激活参数都在 3B 量级，分数却差出 5 分以上。差异更可能落在训练和循指纪律上，而不是参数体量。</p>
 <p class="body-copy prose-gap">在信息基本齐备的 A2 条件下，模型之间的差距并没有缩小。Haiku 和 Kimi 都是 7.7，Qwen 只有 3.8。这说明分数差异已经更多落在模型本身的工程执行能力上。</p>
 <p class="body-copy prose-gap">看每个模型从 A0_interactive 到 A2 的变化，可以分出三类：</p>
 <p class="body-copy prose-gap">Claude Haiku 在 A0_interactive 已经做到 8.0，A1/A2 在 8 分上下小幅波动（8.2、7.7）——0.5 分级别的差距在 N=4 的噪声范围内可视作饱和。更接近的解释是，它在最少干预的条件下就把该探索的探索完了，提示给得再多也没有额外增量。Kimi 走势接近，属于探索和执行都到位的一档。</p>
@@ -975,7 +975,7 @@
 </section>
 <section id="cli-results-table-zh" class="section">
 <h3 class="sub-title">模型分数</h3>
-<p class="body-copy">表格按 4 个条件展示 3 个核心任务的平均分。A0_oneshot 主要看指令遵循——不该执行时执行会被重罚，所以分数差距最大；A0_interactive 到 A2 看的是 inspect、dry-run、execute、verify 的闭环质量，信息和提示量逐级放宽。</p>
+<p class="body-copy">表格按 4 个条件展示 3 个核心任务的平均分。分数是 inspect / dry-run / execute / verify 闭环各环节的合分，不是单纯的 final-state oracle（终态文件系统是否正确）通过率——有些 run 终态没坏但纪律环节失败，仍会被扣分。A0_oneshot 主要看指令遵循——不该执行时执行会被重罚，所以分数差距最大；A0_interactive 到 A2 看的是闭环质量，信息和提示量逐级放宽。</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>任务条件</th><th>Claude Haiku 4.5</th><th>Kimi K2.5</th><th>DeepSeek V4 Flash</th><th>MiMo 2.5 Pro</th><th>GLM 4.7 Flash</th><th>Qwen3 Coder 30B</th></tr></thead>
@@ -993,7 +993,7 @@
 </section>
 <section id="cli-task_summary-zh" class="section">
 <h3 class="sub-title">结果解读</h3>
-<p class="body-copy prose-gap">模型训练里语义理解和工程能力并不挂钩。CLI 这条线考的不是语言理解，是 inspect-first、稳定写 ledger、按顺序落 manifest 和 rollback 这些工程动作，靠的是训练里有没有专门的执行类语料，不是靠参数堆出来的。另一面，小模型 effective context 通常比标注的最大长度短不少，信息量一上来就抓不住重点。</p>
+<p class="body-copy prose-gap">当前样本里，语义理解和这条线考察的工程动作没有看到稳定对应。CLI 这条线考的不是语言理解，是 inspect-first、稳定写 ledger、按顺序落 manifest 和 rollback 这些工程动作，更可能取决于训练里有没有专门的执行类语料，而不是参数体量。另一面，小模型 effective context 通常比标注的最大长度短不少，信息量一上来就抓不住重点。</p>
 <p class="body-copy prose-gap">六个模型按行为模式可以分成三类。MiMo 和 Haiku 纪律执行都到位，可以独立承担有审计要求的执行回路。Kimi 和 DeepSeek 给定边界时表现接近第一梯队，但严格条件下守不住，是典型的会做但不会停。GLM 和 Qwen 双弱，目前不适合独立承担 CLI 执行回路。</p>
 <p class="body-copy prose-gap">同样的总均分背后，模型解决问题的思路并不一样。Haiku 倾向于在边界不清楚时主动保守，宁可不动也不冒进；DeepSeek 正相反，默认假设可以执行，缺乏外部约束时倾向于主动执行；MiMo 两边都不极端，是更稳态的曲线。落到真实任务上，选哪一种取决于使用场景能承受哪一类失败。</p>
 <p class="body-copy prose-gap">高风险、需要审计的主任务优先用 MiMo 或 Haiku；上游已经把边界框死、只剩执行的子步骤，DeepSeek 和 Kimi 都能担；GLM 和 Qwen 暂时只适合作为外部脚本已经兜底的轻量执行选项。</p>
@@ -1244,7 +1244,7 @@
 <h3 class="sub-title">结果解读</h3>
 <p class="body-copy prose-gap">看 v1 起点和复核走势，可以分出三类。Haiku 是“v1 就站住”：B1 worker_v1 6.0，复核和 guardrail 加起来都只动 ±0.5。Kimi 和 MiMo 是“起点中段、复核把它拉起来”：B1 改进 +2.5 / +1.2，但 guardrail 一加，复核的空间就被吃掉了（Kimi 是把红利预先压进 v1，MiMo 是把 v2 的复核动力削掉）。GLM 是“起点低、但红利不被吃”：B1 和 B1G 都稳定 +0.9。</p>
 <p class="body-copy prose-gap">另外两个是反例。DeepSeek 在 B1 下复核反而扣分（−0.5），加 guardrail 才把漂移压回近似持平——说明复核不能默认开，要看模型自己的 revision discipline。Qwen 是另一种：起点不稳、复核也救不回来（B1 +0.0、B1G −0.1）。</p>
-<p class="body-copy prose-gap">参数规模和这条线对不上。激活参数最大的 MiMo（42B / 1.02T 总参）worker_v1 只有 6.0；约 3B 量级的 GLM 和 Qwen 在复核这一项差出近 1 分。参数量解释不了这条线上的差距。</p>
+<p class="body-copy prose-gap">参数规模和这条线同样对不上。激活参数最大的 MiMo（42B / 1.02T 总参）worker_v1 只有 6.0；约 3B 量级的 GLM 和 Qwen 在复核这一项差出近 1 分。当前样本里，参数量没能解释这条线上的差距。</p>
 <p class="body-copy prose-gap">落到使用建议：高风险 handoff 优先 Haiku；信息已经框好、能跑两轮的任务，Kimi 或 MiMo 在 B1 下反而比 Haiku 更高；GLM 适合外部已经把边界框死、再走一次复核兜底；DeepSeek 单走可以，不要默认替它开复核；Qwen 留给低风险轻量委派。</p>
 <p class="body-copy prose-gap">一个跨模型的工程结论：在 Kimi / MiMo 这类模型上 guardrail 与复核会互相抵消，不要默认同时开；这条结论基于 N=4 的样本，需要在更大样本上复测确认。</p>
 </section>

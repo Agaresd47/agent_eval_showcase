@@ -4,46 +4,85 @@ import argparse
 import html
 import json
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
 SOURCE_REPO = ROOT.parent / "Agent_info_flow"
 
-SYNC_TARGETS = [
-    {
-        "label": "agent-eval",
-        "source": SOURCE_REPO / "website_showcase" / "index.html",
-        "target": ROOT / "agent-eval" / "index.html",
+SUBPAGES = {
+    "agent-eval": {
+        "builder": ROOT / "agent-eval" / "build_showcase.py",
+        "sync": [
+            (
+                SOURCE_REPO / "website_showcase" / "build_showcase.py",
+                ROOT / "agent-eval" / "build_showcase.py",
+            ),
+            (
+                SOURCE_REPO / "website_showcase" / "context.json",
+                ROOT / "agent-eval" / "context.json",
+            ),
+            (
+                SOURCE_REPO / "website_showcase" / "first_page_cn.json",
+                ROOT / "agent-eval" / "first_page_cn.json",
+            ),
+            (
+                SOURCE_REPO / "website_showcase" / "first_page_en.json",
+                ROOT / "agent-eval" / "first_page_en.json",
+            ),
+        ],
     },
-    {
-        "label": "agent-dev",
-        "source": SOURCE_REPO / "dev" / "agent dev showcase" / "Task Forge v2 - Showcase.html",
-        "target": ROOT / "agent-dev" / "index.html",
+    "agent-dev": {
+        "builder": ROOT / "agent-dev" / "build_showcase.py",
+        "sync": [
+            (
+                SOURCE_REPO / "dev" / "agent dev showcase" / "build_showcase.py",
+                ROOT / "agent-dev" / "build_showcase.py",
+            ),
+            (
+                SOURCE_REPO / "dev" / "agent dev showcase" / "context.json",
+                ROOT / "agent-dev" / "context.json",
+            ),
+            (
+                SOURCE_REPO / "dev" / "agent dev showcase" / "tokens.css",
+                ROOT / "agent-dev" / "tokens.css",
+            ),
+        ],
     },
-    {
-        "label": "agent-dev",
-        "source": SOURCE_REPO / "dev" / "agent dev showcase" / "tokens.css",
-        "target": ROOT / "agent-dev" / "tokens.css",
-    },
-]
+}
 
 
 def load_context() -> dict:
     return json.loads((ROOT / "index.json").read_text(encoding="utf-8"))
 
 
-def sync_showcases() -> list[str]:
+def sync_sources() -> list[str]:
     copied: list[str] = []
-    for item in SYNC_TARGETS:
-        source = item["source"]
-        target = item["target"]
-        if not source.exists():
-            raise FileNotFoundError(f"Missing source for {item['label']}: {source}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        copied.append(f"{source} -> {target}")
+    for page in SUBPAGES.values():
+        for source, target in page["sync"]:
+            if not source.exists():
+                raise FileNotFoundError(f"Missing source: {source}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+            copied.append(f"{source} -> {target}")
     return copied
+
+
+def run_subpage_builders() -> list[str]:
+    built: list[str] = []
+    for slug, page in SUBPAGES.items():
+        builder = page["builder"]
+        if not builder.exists():
+            raise FileNotFoundError(f"Missing builder for {slug}: {builder}")
+        subprocess.run(
+            [sys.executable, str(builder)],
+            check=True,
+            cwd=builder.parent,
+        )
+        built.append(slug)
+    return built
 
 
 def build_cards(projects: list[dict]) -> str:
@@ -296,7 +335,7 @@ def render_index(context: dict) -> str:
     </section>
     <section class="grid">{cards}</section>
     <footer>
-      根入口页由 <code>index.json</code> 和 <code>build_showcase.py</code> 生成；两个子页面从旁边的 <code>Agent_info_flow</code> 工作区同步而来。
+      根入口页由 <code>index.json</code> 和 <code>build_showcase.py</code> 生成；两个子页面的源码与构建脚本也已经收进当前仓库，运行一次顶层构建即可重建三个页面。
     </footer>
   </main>
 </body>
@@ -304,24 +343,38 @@ def render_index(context: dict) -> str:
 """
 
 
+def build_landing_page() -> Path:
+    context = load_context()
+    html_output = render_index(context)
+    output_path = ROOT / "index.html"
+    output_path.write_text(html_output, encoding="utf-8")
+    return output_path
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--skip-sync",
+        "--sync-sources",
         action="store_true",
-        help="Only rebuild the landing page without copying subpages.",
+        help="Refresh subpage source files from the sibling Agent_info_flow workspace.",
+    )
+    parser.add_argument(
+        "--skip-subpages",
+        action="store_true",
+        help="Only rebuild the landing page.",
     )
     args = parser.parse_args()
 
-    if not args.skip_sync:
-        copied = sync_showcases()
-        for item in copied:
+    if args.sync_sources:
+        for item in sync_sources():
             print(f"synced {item}")
 
-    context = load_context()
-    html_output = render_index(context)
-    (ROOT / "index.html").write_text(html_output, encoding="utf-8")
-    print(f"built {ROOT / 'index.html'}")
+    if not args.skip_subpages:
+        for slug in run_subpage_builders():
+            print(f"built {slug}")
+
+    output_path = build_landing_page()
+    print(f"built {output_path}")
 
 
 if __name__ == "__main__":

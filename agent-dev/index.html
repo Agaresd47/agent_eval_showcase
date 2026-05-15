@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Task Forge v2 - Showcase</title>
+<meta name="description" content="一个 Agent 工程项目：把真实生产代码自动转化为可复现、可分级的 Agent 基准评测任务，重点在 workflow 与确定性校准，不在证明某个单一模型最强。" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-fg-1);
+    line-height: var(--leading-normal);
+  }
+  a { color: var(--color-accent); text-decoration: none; }
+  a:hover { color: var(--color-accent-hover); }
+  code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--color-surface-2);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: var(--color-fg-1);
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-6); }
+  .topbar {
+    height: var(--nav-height);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex; align-items: center;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar .wrap { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); }
+  .topbar .brand { display: flex; align-items: center; gap: var(--space-3); font-weight: var(--font-medium); }
+  .topbar .brand .mark {
+    width: 22px; height: 22px; border-radius: var(--radius-sm);
+    background: var(--color-accent); position: relative;
+  }
+  .topbar .brand .mark::after {
+    content: ""; position: absolute; inset: 4px;
+    border: 1.5px solid #fff; border-radius: 2px;
+    border-bottom-color: transparent; border-right-color: transparent;
+    transform: rotate(45deg);
+  }
+  .topbar nav { display: flex; gap: var(--space-5); font-size: var(--text-sm); }
+  .topbar nav a { color: var(--color-fg-2); padding: 6px 0; }
+  .topbar nav a:hover { color: var(--color-fg-1); }
+  .topbar .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-3); }
+  .hero {
+    padding: var(--space-12) 0 var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+    background:
+      radial-gradient(circle at 88% 10%, var(--color-accent-subtle) 0, transparent 45%),
+      var(--color-bg);
+  }
+  .hero .eyebrow {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-accent); letter-spacing: var(--tracking-wide);
+    margin-bottom: var(--space-3);
+    display: flex; align-items: center; gap: var(--space-2);
+  }
+  .hero .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px var(--color-accent-subtle);
+  }
+  .hero h1 {
+    font-size: 44px; line-height: 1.05;
+    letter-spacing: -0.02em; font-weight: var(--font-semibold);
+    max-width: 820px; margin-bottom: var(--space-4);
+  }
+  .hero h1 .accent { color: var(--color-accent); }
+  .hero .lede {
+    max-width: 760px;
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    color: var(--color-fg-2);
+    margin-bottom: var(--space-6);
+  }
+  .hero .lede strong { color: var(--color-fg-1); font-weight: var(--font-medium); }
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-5);
+  }
+  .stat .num {
+    font-family: var(--font-mono); font-size: 24px;
+    font-weight: var(--font-medium); color: var(--color-fg-1);
+    letter-spacing: -0.01em;
+  }
+  .stat .label { margin-top: 2px; color: var(--color-fg-3); font-size: var(--text-xs); }
+  section.block {
+    padding: var(--space-12) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  section.block.tight { padding: var(--space-8) 0; }
+  .section-head {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: var(--space-6);
+    align-items: baseline;
+    margin-bottom: var(--space-6);
+  }
+  .section-head .kicker {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-fg-3); letter-spacing: var(--tracking-wide);
+  }
+  .section-head h2 {
+    font-size: 26px; letter-spacing: -0.015em; margin-bottom: var(--space-2);
+  }
+  .section-head .sub {
+    color: var(--color-fg-2); font-size: var(--text-base);
+    line-height: var(--leading-relaxed); max-width: 760px;
+  }
+  .problem-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .problem-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+  }
+  .problem-card.is { border-color: var(--color-accent-muted); background: var(--color-accent-subtle); }
+  .problem-card h3 {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide); text-transform: uppercase;
+    color: var(--color-fg-3); margin-bottom: var(--space-3);
+  }
+  .problem-card.is h3 { color: var(--color-accent); }
+  .problem-card p { color: var(--color-fg-2); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+  .problem-card.is p { color: var(--color-fg-1); }
+  .arch {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .arch-layer {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    align-items: start;
+  }
+  .arch-layer:first-child { border-top: 0; }
+  .arch-layer .label {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .arch-layer .label .num {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-fg-3); letter-spacing: var(--tracking-wide);
+  }
+  .arch-layer .label .name { font-size: var(--text-base); font-weight: var(--font-medium); }
+  .arch-layer .body { color: var(--color-fg-2); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+  .arch-layer .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: var(--space-2); }
+  .arch-chip {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 2px 7px; border-radius: var(--radius-sm);
+    background: var(--color-bg); color: var(--color-fg-2);
+    border: 1px solid var(--color-border);
+  }
+  .arch-layer.deterministic { background: #fafaf7; }
+  .lane-toggle {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden; background: var(--color-surface);
+    margin-bottom: var(--space-5);
+  }
+  .lane-toggle button {
+    appearance: none; background: transparent; border: 0;
+    padding: 7px 13px; font: inherit; font-size: var(--text-sm);
+    color: var(--color-fg-2); cursor: pointer;
+    font-family: var(--font-mono); transition: var(--transition-fast);
+  }
+  .lane-toggle button + button { border-left: 1px solid var(--color-border); }
+  .lane-toggle button.active { background: var(--color-accent); color: #fff; }
+  .lane-toggle button:hover:not(.active) { background: var(--color-surface-2); }
+  .pipeline {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-card);
+  }
+  .phase-row { display: grid; gap: var(--space-2); }
+  .step {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    display: flex; align-items: center; gap: var(--space-3);
+    transition: var(--transition-fast);
+  }
+  .step:hover { border-color: var(--color-accent-muted); background: var(--color-accent-subtle); }
+  .step .ix {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-fg-3); width: 24px;
+    flex-shrink: 0; text-align: right;
+  }
+  .step .name {
+    font-family: var(--font-mono); font-size: var(--text-sm);
+    color: var(--color-fg-1); font-weight: var(--font-medium);
+    min-width: 180px;
+  }
+  .step .what { color: var(--color-fg-2); font-size: var(--text-sm); }
+  .step.critic { border-left: 3px solid var(--color-accent); }
+  .step.deterministic { background: #fafaf7; position: relative; }
+  .step.deterministic::after {
+    content: "deterministic"; position: absolute; right: 12px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--color-verdict-safe-failure);
+    background: var(--color-verdict-safe-failure-bg);
+    border: 1px solid var(--color-verdict-safe-failure-border);
+    padding: 1px 6px; border-radius: var(--radius-sm);
+    letter-spacing: var(--tracking-wide);
+  }
+  .phase-label {
+    display: flex; align-items: center; gap: var(--space-3);
+    margin: var(--space-4) 0 var(--space-1);
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--color-fg-3); letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+  .phase-label::before, .phase-label::after { content: ""; height: 1px; background: var(--color-border); }
+  .phase-label::before { width: 16px; }
+  .phase-label::after  { flex: 1; }
+  .phase-label:first-child { margin-top: 0; }
+  .critics-fan { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2); }
+  .lane-pane { display: none; }
+  .lane-pane.active { display: block; }
+  .tree {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-card);
+    display: grid; gap: var(--space-2);
+  }
+  .gate {
+    display: grid;
+    grid-template-columns: 200px 1fr 180px;
+    gap: var(--space-4);
+    align-items: stretch;
+    padding: var(--space-4);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+  .gate .gate-label { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .gate .gate-num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-3); letter-spacing: var(--tracking-wide); }
+  .gate .gate-title { font-size: var(--text-base); font-weight: var(--font-medium); }
+  .gate .conds { display: grid; gap: 4px; align-content: center; }
+  .gate .cond {
+    font-family: var(--font-mono); font-size: var(--text-sm);
+    color: var(--color-fg-2);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 5px 9px;
+  }
+  .gate .outcomes { display: grid; gap: 4px; align-content: center; }
+  .outcome { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); font-family: var(--font-mono); }
+  .outcome .arrow { color: var(--color-fg-3); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 9px; border-radius: var(--radius-full);
+    font-size: var(--text-xs); font-family: var(--font-mono);
+    font-weight: var(--font-medium); border: 1px solid;
+  }
+  .pill.reject  { color: var(--color-verdict-unsafe-failure); background: var(--color-verdict-unsafe-failure-bg); border-color: var(--color-verdict-unsafe-failure-border); }
+  .pill.support { color: var(--color-verdict-fragile-success); background: var(--color-verdict-fragile-success-bg); border-color: var(--color-verdict-fragile-success-border); }
+  .pill.anchor  { color: var(--color-verdict-safe-success); background: var(--color-verdict-safe-success-bg); border-color: var(--color-verdict-safe-success-border); }
+  .gate.terminal { background: var(--color-verdict-safe-success-bg); border-color: var(--color-verdict-safe-success-border); }
+  .gate-connector { height: 12px; margin-left: 110px; border-left: 1.5px dashed var(--color-border-strong); }
+  .samples { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+  .sample {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: var(--shadow-card);
+  }
+  .sample .sample-head {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  }
+  .sample .sample-file { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-fg-1); font-weight: var(--font-medium); }
+  .sample .sample-body { padding: var(--space-4); flex: 1; display: flex; flex-direction: column; gap: var(--space-3); }
+  .sample .row { display: grid; grid-template-columns: 80px 1fr; gap: var(--space-2); font-size: var(--text-sm); }
+  .sample .row .k { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-3); text-transform: uppercase; letter-spacing: var(--tracking-wide); padding-top: 2px; }
+  .sample .row .v { color: var(--color-fg-1); font-family: var(--font-mono); font-size: var(--text-sm); }
+  .sample .why { color: var(--color-fg-2); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+  .sample .reason-codes { display: flex; flex-wrap: wrap; gap: 4px; }
+  .reason-code {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 2px 6px; border-radius: var(--radius-sm);
+    background: var(--color-surface-2); color: var(--color-fg-2);
+    border: 1px solid var(--color-border);
+  }
+  .reason-code.pos { color: var(--color-verdict-safe-success); border-color: var(--color-verdict-safe-success-border); background: var(--color-verdict-safe-success-bg); }
+  .reason-code.neg { color: var(--color-verdict-unsafe-failure); border-color: var(--color-verdict-unsafe-failure-border); background: var(--color-verdict-unsafe-failure-bg); }
+  .reason-code.warn { color: var(--color-verdict-fragile-success); border-color: var(--color-verdict-fragile-success-border); background: var(--color-verdict-fragile-success-bg); }
+  .why-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .why-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+  }
+  .why-card .num {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-accent); letter-spacing: var(--tracking-wide);
+    margin-bottom: var(--space-2);
+  }
+  .why-card h3 {
+    font-size: var(--text-base); font-weight: var(--font-medium);
+    margin-bottom: var(--space-2); letter-spacing: -0.01em;
+  }
+  .why-card p { color: var(--color-fg-2); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+  .stack-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .stack-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-card);
+  }
+  .stack-card h4 {
+    font-family: var(--font-mono); font-size: var(--text-xs);
+    color: var(--color-accent); letter-spacing: var(--tracking-wide);
+    text-transform: uppercase; margin-bottom: var(--space-3);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .stack-card h4 .layer-num { color: var(--color-fg-3); }
+  .stack-card ul { list-style: none; padding: 0; }
+  .stack-card li {
+    padding: 5px 0; font-size: var(--text-sm); color: var(--color-fg-2);
+    border-top: 1px solid var(--color-border);
+    line-height: var(--leading-snug);
+  }
+  .stack-card li:first-child { border-top: 0; }
+  .versions {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    display: flex; flex-wrap: wrap; gap: 4px;
+    align-items: center;
+  }
+  .versions .label {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--color-fg-3); letter-spacing: var(--tracking-wide);
+    text-transform: uppercase; margin-right: var(--space-2);
+  }
+  .artifacts-table {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .art-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--color-border);
+    align-items: baseline;
+  }
+  .art-row:first-child { border-top: 0; }
+  .art-row:hover { background: var(--color-surface-2); }
+  .art-row .file { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-fg-1); }
+  .art-row .desc { color: var(--color-fg-2); font-size: var(--text-sm); }
+  footer { padding: var(--space-8) 0 var(--space-12); color: var(--color-fg-3); font-size: var(--text-sm); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: var(--space-6); flex-wrap: wrap; }
+  footer code { background: transparent; color: var(--color-fg-2); padding: 0; }
+  @media (max-width: 920px) {
+    .hero h1 { font-size: 32px; }
+    .stat-strip { grid-template-columns: repeat(2, 1fr); row-gap: var(--space-3); }
+    .section-head { grid-template-columns: 1fr; gap: var(--space-2); }
+    .samples { grid-template-columns: 1fr; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .topbar nav { display: none; }
+    .arch-layer { grid-template-columns: 1fr; gap: var(--space-2); }
+    .stack-grid { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .critics-fan { grid-template-columns: 1fr; }
+    .gate { grid-template-columns: 1fr; }
+    .gate-connector { margin-left: 24px; }
+  }
+
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><div class="brand"><span class="mark"></span><span>Task Forge v2</span></div><nav><a href="#problem">Overview</a><a href="#arch">Architecture</a><a href="#pipeline">Pipeline</a><a href="#rubric">Rubric</a><a href="#samples">Samples</a><a href="#evidence">Evidence</a><a href="#why">Highlights</a><a href="#stack">Stack</a><a href="#artifacts">Artifacts</a></nav><div class="meta">v2 · 试运行版本</div></div></header><section class="hero"><div class="wrap"><div class="eyebrow"><span class="dot"></span>Agent 开发 · 评测工具链 · 个人项目</div><h1>把真实开发脚本，<br/>自动转化为<span class="accent">可复现</span>的 Agent 评测任务。</h1><p class="lede">Task Forge v2 是一个基于 LLM 的多步骤编排系统。输入是一份真实开发场景中的 Python 脚本（<code>dev/code_source/dirty_work/*.py</code>），输出是一道经过 4 个独立 critic 对抗审查、并由确定性规则函数完成最终分级的 Agent 基准评测任务。<strong>当前模型层默认接 Mimo，但项目的主张不在某个模型本身，而在 workflow scaffolding、critic 审查与 deterministic calibration</strong>——一道任务是否被采纳为高质量 <code>anchor</code>，由一组明确的硬性条件决定，模型不参与最终判定。</p><p class="lede" style="font-size: var(--text-sm); color: var(--color-fg-3);">术语统一：<code>anchor</code>（主锚任务，质量最高）／ <code>supporting</code>（辅助任务，可用但有上限）／ <code>reject</code>（拒绝，不进入评测集）。下文及分级标签均使用此三个英文 key。</p><div class="stat-strip"><div class="stat"><div class="num">13</div><div class="label">主流程节点</div></div><div class="stat"><div class="num">4</div><div class="label">对抗式 critic</div></div><div class="stat"><div class="num">17</div><div class="label">完整 assessed runs</div></div><div class="stat"><div class="num">10 / 7</div><div class="label">full review / fast path</div></div></div></div></section><section class="block" id="problem"><div class="wrap"><div class="section-head"><div class="kicker">01 · 项目概述</div><div><h2>它解决的是 Agent 评测里&quot;题目从哪来&quot;的工程问题。</h2><p class="sub">目前 Agent 评测圈的主流做法是用 LLM-as-judge 给 Agent 输出打分。这套做法在<strong>评测的可复现性</strong>上存在结构性问题：同一份输入，不同模型版本、不同温度、不同 prompt 会给出不同分数；同时优质的"评测任务"本身就是稀缺资源，需要人工产出。 Task Forge v2 的差异点是<strong>把最终分级移出模型层</strong>——LLM 只负责生成、审查与修订，任务最终是 <code>anchor</code> 还是 <code>reject</code> 由一条纯规则函数说了算，相同输入永远产出相同分级。这就让"自动产出评测任务"和"评测任务的质量保证"这两件事可以同时成立。</p><p class="sub" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-fg-3);">它<strong>不是聊天机器人，也不是 RAG 应用</strong>（虽然内部有检索层）。下面三张卡片是项目的输入、中间层与输出。</p></div></div><div class="problem-grid"><div class="problem-card"><h3>输入 · INPUT</h3><p>一份真实开发场景中的 Python 脚本，带真实的依赖、函数、文件路径与副作用。来源是开发者日常工作里产出的"脏脚本"——不是教科书例子，有真实工程上下文。</p></div><div class="problem-card"><h3>中间层 · PIPELINE</h3><p>13 节点 LangGraph 状态机：源代码挖掘 → 历史任务检索 → 初判 → 草稿 → 4 critic 并行审查 → 修订合并 → 终稿 → 规范化 → 规则层评分 → 落盘。低价值来源走 6 节点快速路径。</p></div><div class="problem-card is"><h3>输出 · OUTPUT</h3><p>一道结构化的评测任务（JSON），含任务边界、规划粒度、可观察答案；以及一份 <code>anchor / supporting / reject</code> 三选一的最终分级与对应 reason codes。回归脚本可直接读取该分级。</p></div></div></div></section><section class="block" id="arch"><div class="wrap"><div class="section-head"><div class="kicker">02 · 系统架构</div><div><h2>三层架构：模型、记忆、规则各司其职。</h2><p class="sub">模型层负责生成与评判，记忆层负责跨轮次复用历史产物，规则层负责最终判定。各层通过结构化 schema 通信，避免自然语言层面的歧义传播。</p></div></div><div class="arch"><div class="arch-layer"><div class="label"><div class="num">第一层</div><div class="name">模型层（Model）</div></div><div class="body">一个 LLM 客户端被 8 个 prompt 复用：triage、draft、4 个 critic、synthesize_review、curate。每个 prompt 都绑定对应的 Pydantic schema，模型必须按 schema 输出，否则进入 JSON 自修复流程。模型本身不掌握最终分级逻辑，每一步只回答当前节点的问题。<div class="chips"><span class="arch-chip">mimo-v2.5-pro</span><span class="arch-chip">temperature 0.2</span><span class="arch-chip">PydanticOutputParser</span><span class="arch-chip">JSON 自修复</span></div></div></div><div class="arch-layer"><div class="label"><div class="num">第二层</div><div class="name">记忆层（Memory）</div></div><div class="body">基于 LlamaIndex VectorStoreIndex，索引内容是<strong>系统在过去运行中自己产出的 artifact</strong>：源代码摘要、已审核任务、anchor 评估、critic 审查记录。检索采用三路并行（源代码主键、任务族邻居、任务形态邻居），随后按 family / shape 标签做后过滤。索引按 corpus signature 持久化在 <code>dev/.cache/retrieval_index/</code>，相同语料不会重复构建索引。<div class="chips"><span class="arch-chip">VectorStoreIndex</span><span class="arch-chip">all-MiniLM-L6-v2</span><span class="arch-chip">SentenceSplitter 700/120</span><span class="arch-chip">语料签名缓存</span></div></div></div><div class="arch-layer deterministic"><div class="label"><div class="num">第三层</div><div class="name">规则层（Rule）</div></div><div class="body"><code>assessment.py</code> 中的若干纯函数：<code>postprocess</code> 负责对任务边界、规划粒度、可执行性标记进行规范化；<code>assess_task</code> 按硬性条件完成最终分级。该层不调用任何模型——相同的输入永远输出相同的分级结果与 reason codes。这是项目相较于"LLM-as-judge"方案在可复现性上的核心差异点。<div class="chips"><span class="arch-chip">纯函数</span><span class="arch-chip">确定性</span><span class="arch-chip">reason codes</span><span class="arch-chip">不调用 LLM</span></div></div></div></div></div></section><section class="block" id="pipeline"><div class="wrap"><div class="section-head"><div class="kicker">03 · 工作流程</div><div><h2>主流程与快速拒绝路径，按预算分流。</h2><p class="sub">流程中每一步都对应代码中同名函数。triage 之后分两条路径：通过审查的源代码进入 13 步主流程；判定为 reject 的源代码进入 6 步快速路径，跳过 critic 阶段以节约预算。</p></div></div><div class="lane-toggle" role="tablist"><button class="active" data-lane="main">主流程 · 13 步</button><button data-lane="fast">快速拒绝路径 · 6 步</button></div><div class="pipeline"><div class="lane-pane active" data-lane="main"><div class="phase-label">阶段 A · 源代码采集</div><div class="phase-row"><div class="step"><div class="ix">01</div><div class="name">mine_source</div><div class="what">读取源脚本，抽取依赖、函数、路径、风险标签。</div></div><div class="step"><div class="ix">02</div><div class="name">retrieve_context</div><div class="what">按任务族检索历史任务、报告与产物。</div></div><div class="step"><div class="ix">03</div><div class="name">triage_source</div><div class="what">判断源代码是否值得继续投入预算：anchor / supporting / reject 三类初判。</div></div></div><div class="phase-label">阶段 B · 任务草稿生成</div><div class="phase-row"><div class="step"><div class="ix">04</div><div class="name">draft_task</div><div class="what">由 LLM 产出第一版任务草稿。</div></div></div><div class="phase-label">阶段 C · 对抗式审查（4 个 critic 并行）</div><div class="critics-fan"><div class="step critic"><div class="ix">05</div><div class="name">boundary_critic</div><div class="what">检查任务是否超出&quot;单一决策&quot;的范围。</div></div><div class="step critic"><div class="ix">06</div><div class="name">leakage_critic</div><div class="what">检查答案是否在题面或上下文中已被泄露。</div></div><div class="step critic"><div class="ix">07</div><div class="name">scope_critic</div><div class="what">检查任务是否退化为静态代码审查题。</div></div><div class="step critic"><div class="ix">08</div><div class="name">harness_critic</div><div class="what">检查评测环境是否能真正观测到答案。</div></div></div><div class="phase-row" style="margin-top: var(--space-2);"><div class="step"><div class="ix">09</div><div class="name">synthesize_review</div><div class="what">汇总 4 个 critic 的反馈，形成可执行的修订方案。</div></div><div class="step"><div class="ix">10</div><div class="name">curate_task</div><div class="what">curator 按修订方案产出最终任务版本。</div></div></div><div class="phase-label">阶段 D · 校准与产出</div><div class="phase-row"><div class="step deterministic"><div class="ix">11</div><div class="name">postprocess</div><div class="what">规范化任务边界、规划粒度、可执行性标记。</div></div><div class="step deterministic"><div class="ix">12</div><div class="name">assess_task</div><div class="what">规则层按硬性条件完成最终分级，模型不参与。</div></div><div class="step deterministic"><div class="ix">13</div><div class="name">emit_artifacts</div><div class="what">输出 JSON artifact，供下一轮 retrieve_context 复用。</div></div></div></div><div class="lane-pane" data-lane="fast"><div class="phase-label">快速拒绝路径 · 跳过 critic 循环</div><div class="phase-row"><div class="step"><div class="ix">01</div><div class="name">mine_source</div><div class="what">与主流程一致。</div></div><div class="step"><div class="ix">02</div><div class="name">retrieve_context</div><div class="what">与主流程一致，检索结果保留作为拒绝证据。</div></div><div class="step"><div class="ix">03</div><div class="name">triage_source</div><div class="what">判定为 reject，跳过 critic 阶段。</div></div><div class="step"><div class="ix">04</div><div class="name">curate_reject_seed</div><div class="what">不调用 critic，直接基于源代码与初判结果固化拒绝条目。</div></div><div class="step deterministic"><div class="ix">05</div><div class="name">assess_task</div><div class="what">规则层确认拒绝原因。</div></div><div class="step deterministic"><div class="ix">06</div><div class="name">emit_artifacts</div><div class="what">输出拒绝条目 artifact。</div></div></div><p style="color: var(--color-fg-3); font-size: var(--text-sm); margin-top: var(--space-4); font-family: var(--font-mono);">// 主流程约 8 次模型调用；快速路径约 1 次。</p></div></div></div></section><section class="block" id="rubric"><div class="wrap"><div class="section-head"><div class="kicker">04 · 评分规则</div><div><h2>最终分级由确定性判定树决定。</h2><p class="sub"><code>assess_task</code> 是纯规则函数。输入为源代码摘要、已审核任务、质量标记、初判结果；输出为最终分级与 reason codes。下方四道闸门按顺序执行。</p></div></div><div class="tree"><div class="gate"><div class="gate-label"><div class="gate-num">闸门 1</div><div class="gate-title">直接拒绝</div></div><div class="conds"><div class="cond">质量标记包含 <strong>reject_seed</strong>（来源信息过弱，无法构题）</div><div class="cond">校验器报错列表非空（任务字段缺失或不一致）</div><div class="cond">初判结果为 <strong>reject</strong></div></div><div class="outcomes"><div class="outcome">任一命中 <span class="arrow">→</span><span class="pill reject">reject</span></div><div class="outcome">全部不命中 <span class="arrow">↓</span></div></div></div><div class="gate-connector"></div><div class="gate"><div class="gate-label"><div class="gate-num">闸门 2</div><div class="gate-title">静态审查上限</div></div><div class="conds"><div class="cond">任务形态为 <strong>静态代码审查类</strong>（让 Agent 阅读、解释、找问题，但不真正执行）</div><div class="cond">→ 无函数、无依赖、无代码片段：不可作为 supporting</div><div class="cond">→ 含代码证据：仅可作为 supporting，不可升级为 anchor</div></div><div class="outcomes"><div class="outcome">弱静态审查 <span class="arrow">→</span><span class="pill reject">reject</span></div><div class="outcome">有代码证据 <span class="arrow">→</span><span class="pill support">supporting</span></div><div class="outcome">非静态审查 <span class="arrow">↓</span></div></div></div><div class="gate-connector"></div><div class="gate"><div class="gate-label"><div class="gate-num">闸门 3</div><div class="gate-title">anchor 资格（全部满足才通过）</div></div><div class="conds"><div class="cond">任务形态为真实工作流（非空想题、非纯解释题）</div><div class="cond">边界单一 + 产物可观察（评测能验真）</div><div class="cond">规划粒度非泛化决策（不是"看情况办"）</div><div class="cond">动词为可执行类：move / promote / link / emit / write / ledger / execute / mutate</div><div class="cond">风险类别 ∈ { 文件移动、归档清理、文件链接、Schema 输出 }</div></div><div class="outcomes"><div class="outcome">全部满足 <span class="arrow">→</span><span class="pill anchor">anchor</span></div><div class="outcome">任一缺失 <span class="arrow">↓</span></div></div></div><div class="gate-connector"></div><div class="gate terminal"><div class="gate-label"><div class="gate-num">默认</div><div class="gate-title">兜底分级</div></div><div class="conds"><div class="cond">未触发拒绝，亦未达成 anchor 全部条件。任务可用，但不会被算作高质量主锚。</div></div><div class="outcomes"><div class="outcome"><span class="arrow">→</span><span class="pill support">supporting</span></div></div></div></div></div></section><section class="block" id="samples"><div class="wrap"><div class="section-head"><div class="kicker">05 · 样本展示</div><div><h2>三份真实脚本，跑出三种分级。</h2><p class="sub">系统的价值在于<strong>区分三类来源</strong>：值得花预算认真审查的高质量种子、能用但有上限的辅助来源、不该进入完整流程的低价值来源。当前 artifact audit 覆盖 `33` 个 artifact 目录、`17` 个完整 assessed runs；下面展示的是其中最有代表性的三类样本。</p><p class="sub" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-fg-3);"><strong>当前证据快照：</strong>`17` 个完整 assessed runs 里，`10` 个走 full-review 路径、`7` 个走 fast-path reject。`binary_and_dialation_try.py` 目前是稳定 supporting；`CXR_14_process.py` 反复 reject；`compress.py` 已多次进入 anchor，但仍有少量 supporting / reject 漂移，说明 critic 与 retrieval 仍在校准。</p></div></div><div class="samples"><article class="sample"><div class="sample-head"><div class="sample-file">compress.py</div><span class="pill anchor">anchor</span></div><div class="sample-body"><div class="row"><div class="k">任务族</div><div class="v">archive_cleanup（归档清理）</div></div><div class="row"><div class="k">规划粒度</div><div class="v">single archive cleanup eligibility decision</div></div><p class="why"><strong>判定逻辑：</strong>脚本会先把 tar 包解压、校验切分结果，然后才删除原归档——存在真实文件 IO 副作用，边界单一（"是否可以删原包"），评测时可通过观察文件系统验真。闸门 3 全部命中。</p><div class="reason-codes"><span class="reason-code pos">workflow_grounded_shape</span><span class="reason-code pos">single_boundary</span><span class="reason-code pos">artifact_ready</span><span class="reason-code pos">harness_observes_boundary</span><span class="reason-code pos">specific_planning_unit</span><span class="reason-code pos">execution_observable_answer</span></div></div></article><article class="sample"><div class="sample-head"><div class="sample-file">binary_and_dialation_try.py</div><span class="pill support">supporting</span></div><div class="sample-body"><div class="row"><div class="k">任务族</div><div class="v">医学影像处理（类静态审查）</div></div><div class="row"><div class="k">规划粒度</div><div class="v">single bounded workflow decision</div></div><p class="why"><strong>判定逻辑：</strong>含真实 numpy / scipy.ndimage 代码可读，但生成的题目容易退化为"看代码找问题"的静态审查形态，并且涉及多个失败域（IO + 数组操作 + 错误处理）。闸门 2 把它压在 supporting 上限——可用作辅助样本，不能算 anchor。</p><div class="reason-codes"><span class="reason-code warn">static_review_shape</span><span class="reason-code neg">not_execution_grounded</span></div></div></article><article class="sample"><div class="sample-head"><div class="sample-file">CXR_14_process.py</div><span class="pill reject">reject</span></div><div class="sample-body"><div class="row"><div class="k">任务族</div><div class="v">无效种子（reject_seed）</div></div><div class="row"><div class="k">规划粒度</div><div class="v">single source admissibility decision</div></div><p class="why"><strong>判定逻辑：</strong>脚本几乎不含函数与依赖，主体仅为路径声明——可以"看出"是某种数据准备脚本，但抽不出具体可评测边界。初判即判 reject，跳过 4 个 critic，走快速路径。这是系统避免浪费预算的关键场景。</p><div class="reason-codes"><span class="reason-code neg">reject_seed</span><span class="reason-code neg">source_triage_reject</span></div></div></article></div></div></section><section class="block" id="evidence"><div class="wrap"><div class="section-head"><div class="kicker">06 · 证据层</div><div><h2>现在已经有一层可审计的证据，不只是流程图。</h2><p class="sub">这一层证据现在来自四部分：只读 artifact audit、runtime telemetry、critic ablation、以及一个最小 `haiku vs qwen` validity probe。它们一起决定现在能说什么、还不能说什么。</p><p class="sub" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-fg-3);">对应文档：<code>dev/report/task_forge_artifact_audit.md</code>、<code>dev/report/task_forge_ablation_report.md</code>、<code>dev/report/task_forge_validity_probe.md</code> 与 <code>dev/report/task_forge_reuse_inventory.md</code>。</p></div></div><div class="why-grid"><div class="why-card"><div class="num">01</div><h3>当前 artifact audit</h3><p>`dev/artifacts` 现有 `33` 个 artifact 目录，其中 `17` 个是完整 assessed runs。最终桶位分布是 `4 anchor / 4 supporting / 9 reject`；评审路径分布是 `10 full review / 7 fast path`。这已经足够证明三类最终桶与早拒绝路径都真实出现过。</p></div><div class="why-card"><div class="num">02</div><h3>runtime telemetry 与 ablation</h3><p>当前 `4-source x 2-variant` ablation 已完成：`full_review` 与 `no_critics` 都得到 `2 anchor / 1 supporting / 1 reject`，但成本差异明显。平均 `llm_call_count` 从 `6.25` 降到 `2.5`，平均时长从 `43.63s` 降到 `25.01s`。这说明 critic 路径现在的价值更像 trace richness，而不是已经证明会改变最终桶位。</p></div><div class="why-card"><div class="num">03</div><h3>主 eval 项目的可复用资产</h3><p>主项目已经有完整的 canonical surfaces：`144` 个 Chat cells、`96` 个 CLI cells、`72` 个 Task 2 handoff cells，以及配套的 manual rubric、judge disagreement、source-run audit 与 failure taxonomy。Task Forge 可以直接复用这套 audit 结构和 `hard anchor / soft support / counterexample` 的叙事方式。</p></div><div class="why-card"><div class="num">04</div><h3>当前 validity read</h3><p>更大的 `12-task` validity sweep 已完成，比较模型仍是 `haiku` vs `qwen`。当前方向性结论是：`reject` 桶比较成立，但 `anchor > supporting` 仍是 mixed evidence，尤其 `compress.py` 这条 archive-cleanup 线出现明显漂移。Task Forge 已据此新增 `runtime_verification_underdefined` 规则，并把新 rerun 的 `compress.py` 从 anchor 压回 supporting。也就是说，这套系统现在不只会出题，还会根据外部 validity 证据收紧自己的 deterministic rubric。</p></div></div></div></section><section class="block" id="why"><div class="wrap"><div class="section-head"><div class="kicker">07 · 工程亮点</div><div><h2>项目体现的 Agent 工程实践。</h2><p class="sub">下列六个设计选择构成了项目作为 Agent 工程作品的核心价值。</p></div></div><div class="why-grid"><div class="why-card"><div class="num">01</div><h3>多步骤编排</h3><p>采用 13 节点 LangGraph 状态机：<code>triage → draft → 4 critics 并行 → synthesize → curate → assess</code>。每个节点的输入输出都已 schema 化，可独立单测，也可单独重放。</p></div><div class="why-card"><div class="num">02</div><h3>多 critic 对抗式审查</h3><p>4 个 critic 分别覆盖一类失败模式（边界、泄露、范围、评测可观测性），由 <code>synthesize_review</code> 节点合并为统一的修订方案。每个 critic 的偏好可通过替换其 prompt 单独调整。</p></div><div class="why-card"><div class="num">03</div><h3>持久化记忆层</h3><p>每轮运行都消费上一轮的 artifact。LlamaIndex 持久化索引按语料签名缓存——相同语料不会重复嵌入。任务本身无需感知历史，但系统会自动避免与历史任务重叠。</p></div><div class="why-card"><div class="num">04</div><h3>确定性评分</h3><p>项目的核心论点：anchor 资格并非由 LLM 投票决定，而是由 <code>assess_task</code> 纯函数依据多个硬性条件判定。相同输入永远产生相同输出，这是评测工程可复现性的基础要求。</p></div><div class="why-card"><div class="num">05</div><h3>预算感知的路由策略</h3><p>并非每份源代码都值得 8 次模型调用。初判后通过 <code>add_conditional_edges</code> 分流：低价值来源走 6 步快速路径，仅消耗一次模型调用即可完成。这是评测工具中常被忽视的成本意识体现。</p></div><div class="why-card"><div class="num">06</div><h3>结构化输出规范</h3><p>每个节点的 LLM 输出均由 Pydantic 模型定型，失败时进入 JSON 自修复，再次失败才抛出异常。状态合并使用 <code>Annotated[..., operator.add]</code>，避免字符串拼接。失败信息能精确定位到具体 schema 字段，便于排查与回归。</p></div></div></div></section><section class="block" id="stack"><div class="wrap"><div class="section-head"><div class="kicker">08 · 技术栈</div><div><h2>基于成熟工具按职责组合。</h2><p class="sub">不重复造轮子：LangGraph 负责编排，LlamaIndex 负责记忆，Pydantic 负责结构化输出，Mimo 作为模型层。</p></div></div><div class="stack-grid"><div class="stack-card"><h4><span>模型层</span><span class="layer-num">01</span></h4><ul><li>小米 Mimo <code>mimo-v2.5-pro</code></li><li>OpenAI 兼容端点</li><li><code>langchain-openai</code> ChatOpenAI</li><li>temperature 0.2 / 最大 12000 tokens</li><li>调用间隔 10s（速率限制）</li></ul></div><div class="stack-card"><h4><span>编排层</span><span class="layer-num">02</span></h4><ul><li><code>langgraph.StateGraph</code></li><li>13 节点，含 4 critics 并行</li><li>初判后通过 <code>add_conditional_edges</code> 分流</li><li><code>InMemorySaver</code> 检查点</li><li>状态合并使用 <code>Annotated[..., operator.add]</code></li></ul></div><div class="stack-card"><h4><span>记忆层</span><span class="layer-num">03</span></h4><ul><li>LlamaIndex <code>VectorStoreIndex</code></li><li>嵌入模型 <code>all-MiniLM-L6-v2</code></li><li>SentenceSplitter，块 700 / 重叠 120</li><li>三路检索 + 任务族 / 形态后过滤</li><li>按语料签名持久化于 <code>dev/.cache/retrieval_index/</code></li></ul></div><div class="stack-card"><h4><span>结构化输出</span><span class="layer-num">04</span></h4><ul><li>每个节点对应一个 Pydantic v2 模型</li><li><code>PydanticOutputParser</code> 强制 JSON 输出</li><li>失败时进入 JSON 自修复</li><li>schema 与 prompt 一处变更</li><li>异常可精确定位到字段</li></ul></div><div class="stack-card"><h4><span>规则层</span><span class="layer-num">05</span></h4><ul><li><code>assessment.py</code> 纯函数</li><li><code>postprocess</code> 完成规范化</li><li><code>assess_task</code> 多闸门判定</li><li>不调用任何模型</li><li>相同输入恒等输出</li></ul></div><div class="stack-card"><h4><span>运行环境</span><span class="layer-num">06</span></h4><ul><li>Python 3.13</li><li>pytest 单元 / 集成测试</li><li>无 UI，离线批处理</li><li>所有 artifact 以 JSON 落盘至 <code>dev/artifacts/</code></li><li>回归脚本读取 anchor_assessment.json</li></ul></div></div><div class="versions"><span class="label">依赖锁定 · requirements.txt ·</span><span class="reason-code">langgraph 1.1.10</span><span class="reason-code">langchain-core 1.3.3</span><span class="reason-code">langchain-openai 1.2.1</span><span class="reason-code">llama-index-core 0.14.21</span><span class="reason-code">pydantic 2.13.4</span><span class="reason-code">sentence-transformers 5.4.1</span><span class="reason-code">openai 2.36.0</span><span class="reason-code">pytest 9.0.3</span></div></div></section><section class="block tight" id="artifacts"><div class="wrap"><div class="section-head"><div class="kicker">09 · 单次运行产物</div><div><h2>每处理一份源代码后落盘的 JSON 文件。</h2><p class="sub">所有产物都会被下一轮 <code>retrieve_context</code> 直接消费，形成系统的长期记忆。</p></div></div><div class="artifacts-table"><div class="art-row"><div class="file">source_summary.json</div><div class="desc">依赖、函数、路径、风险标签、使用策略提示等源代码摘要信息。</div></div><div class="art-row"><div class="file">retrieval_hits.json</div><div class="desc">基于任务族的历史片段命中结果，含相似度与族标签。</div></div><div class="art-row"><div class="file">source_triage.json</div><div class="desc">初判结论、置信度与引用证据；快速拒绝路径的入口。</div></div><div class="art-row"><div class="file">curated_task.json</div><div class="desc">经 4 个 critic 审查与合并修订后的最终任务版本。</div></div><div class="art-row"><div class="file">anchor_assessment.json</div><div class="desc">最终分级与全部 reason codes——回归脚本读取的主要文件。</div></div></div></div></section><footer><div class="wrap"><div>个人项目 · 试运行阶段 · <code>github.com/Agaresd47/Agent_info_flow_study</code></div><div>方向：<strong>Agent 开发与评测</strong></div></div></footer>
+<script>
+
+  (() => {
+    const buttons = document.querySelectorAll('.lane-toggle button');
+    const panes = document.querySelectorAll('.lane-pane');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lane = btn.getAttribute('data-lane');
+        buttons.forEach(b => b.classList.toggle('active', b === btn));
+        panes.forEach(p => p.classList.toggle('active', p.getAttribute('data-lane') === lane));
+      });
+    });
+  })();
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      if (id.length <= 1) return;
+      const el = document.querySelector(id);
+      if (!el) return;
+      e.preventDefault();
+      window.scrollTo({ top: el.offsetTop - 60, behavior: 'smooth' });
+    });
+  });
+
+</script>
+</body>
+</html>

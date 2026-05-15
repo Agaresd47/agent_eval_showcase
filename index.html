@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Showcase</title>
+  <style>
+    :root {
+      --bg: #f4efe5;
+      --surface: rgba(255, 252, 246, 0.9);
+      --surface-strong: #fffdf8;
+      --fg: #1f1b17;
+      --muted: #6a6258;
+      --line: rgba(31, 27, 23, 0.12);
+      --accent: #b84720;
+      --accent-dark: #8c3114;
+      --shadow: 0 20px 40px rgba(31, 27, 23, 0.08);
+      --radius: 24px;
+      --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--fg);
+      background:
+        radial-gradient(circle at top left, rgba(184, 71, 32, 0.14), transparent 34%),
+        radial-gradient(circle at top right, rgba(30, 85, 120, 0.12), transparent 28%),
+        linear-gradient(180deg, #f9f4ec 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    a { color: inherit; }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 56px 24px 72px;
+    }
+
+    .hero {
+      padding: 36px;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.92));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .kicker::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(184, 71, 32, 0.14);
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(38px, 7vw, 74px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .summary {
+      max-width: 760px;
+      margin-top: 20px;
+      font-size: 17px;
+      line-height: 1.7;
+      color: #372f29;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .stat .value {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .stat .label {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 28px;
+    }
+
+    .card {
+      padding: 28px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .card .eyebrow {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .card h2 {
+      margin: 10px 0 12px;
+      font-size: 30px;
+      letter-spacing: -0.03em;
+    }
+
+    .card p {
+      margin: 0;
+      color: #433b34;
+      line-height: 1.7;
+    }
+
+    .card ul {
+      margin: 18px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 22px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff7f2;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .cta:hover {
+      background: var(--accent-dark);
+    }
+
+    footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.95em;
+    }
+
+    @media (max-width: 800px) {
+      .shell {
+        padding: 24px 16px 40px;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+
+      .stats,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="kicker">Interview Showcase</div>
+      <h1>Agent Showcase</h1>
+      <p class="subtitle">Agent evaluation and agent development case studies</p>
+      <p class="summary">A compact entry point for two related interview showcases: one focuses on evaluating agent behavior under information gaps and execution constraints, the other focuses on building a task-authoring pipeline that turns messy real scripts into reusable eval tasks.</p>
+      <div class="stats"><div class="stat">
+          <div class="value">2</div>
+          <div class="label">Projects</div>
+        </div>
+<div class="stat">
+          <div class="value">Eval + Dev</div>
+          <div class="label">Focus</div>
+        </div>
+<div class="stat">
+          <div class="value">Static Pages</div>
+          <div class="label">Format</div>
+        </div></div>
+    </section>
+    <section class="grid"><article class="card">
+              <div class="eyebrow">Evaluation</div>
+              <h2>Agent Evaluation Showcase</h2>
+              <p>A bilingual showcase covering information-gap handling, CLI execution discipline, and task delegation evaluation. The page consolidates rubric design, judge caveats, failure taxonomies, and concrete model comparisons.</p>
+              <ul><li>Three evaluation tracks with detailed task framing</li><li>Human-readable failure taxonomies and improvement paths</li><li>Built from existing experiment results and audit artifacts</li></ul>
+              <a class="cta" href="./agent-eval/">Open showcase</a>
+            </article>
+<article class="card">
+              <div class="eyebrow">Development</div>
+              <h2>Task Forge v2</h2>
+              <p>An agent-development showcase for a multi-step authoring pipeline that mines dirty Python scripts, routes them through critics, and assigns deterministic task buckets for downstream evaluation.</p>
+              <ul><li>Workflow scaffolding plus four parallel critics</li><li>Deterministic anchor/supporting/reject calibration</li><li>Artifact audit, runtime telemetry, and ablation evidence</li></ul>
+              <a class="cta" href="./agent-dev/">Open showcase</a>
+            </article></section>
+    <footer>
+      Built from <code>index.json</code> via <code>build_showcase.py</code>. Subpages are synced from the sibling <code>Agent_info_flow</code> workspace.
+    </footer>
+  </main>
+</body>
+</html>

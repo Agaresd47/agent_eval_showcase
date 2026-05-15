@@ -1,0 +1,47 @@
+{
+  "site": {
+    "title": "Agent Showcase",
+    "subtitle": "Agent evaluation and agent development case studies",
+    "summary": "A compact entry point for two related interview showcases: one focuses on evaluating agent behavior under information gaps and execution constraints, the other focuses on building a task-authoring pipeline that turns messy real scripts into reusable eval tasks."
+  },
+  "highlights": [
+    {
+      "label": "Projects",
+      "value": "2"
+    },
+    {
+      "label": "Focus",
+      "value": "Eval + Dev"
+    },
+    {
+      "label": "Format",
+      "value": "Static Pages"
+    }
+  ],
+  "projects": [
+    {
+      "slug": "agent-eval",
+      "title": "Agent Evaluation Showcase",
+      "eyebrow": "Evaluation",
+      "description": "A bilingual showcase covering information-gap handling, CLI execution discipline, and task delegation evaluation. The page consolidates rubric design, judge caveats, failure taxonomies, and concrete model comparisons.",
+      "points": [
+        "Three evaluation tracks with detailed task framing",
+        "Human-readable failure taxonomies and improvement paths",
+        "Built from existing experiment results and audit artifacts"
+      ],
+      "href": "./agent-eval/"
+    },
+    {
+      "slug": "agent-dev",
+      "title": "Task Forge v2",
+      "eyebrow": "Development",
+      "description": "An agent-development showcase for a multi-step authoring pipeline that mines dirty Python scripts, routes them through critics, and assigns deterministic task buckets for downstream evaluation.",
+      "points": [
+        "Workflow scaffolding plus four parallel critics",
+        "Deterministic anchor/supporting/reject calibration",
+        "Artifact audit, runtime telemetry, and ablation evidence"
+      ],
+      "href": "./agent-dev/"
+    }
+  ]
+}

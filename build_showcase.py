@@ -21,10 +21,6 @@ SUBPAGES = {
                 ROOT / "agent-eval" / "build_showcase.py",
             ),
             (
-                SOURCE_REPO / "website_showcase" / "context.json",
-                ROOT / "agent-eval" / "context.json",
-            ),
-            (
                 SOURCE_REPO / "website_showcase" / "first_page_cn.json",
                 ROOT / "agent-eval" / "first_page_cn.json",
             ),

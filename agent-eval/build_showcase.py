@@ -2523,7 +2523,13 @@ def main() -> None:
     )
     args = parser.parse_args()
     BAKE_TABLE_MODES = args.bake_table_modes
-    raw_context = json.loads(CONTEXT_PATH.read_text(encoding="utf-8-sig"))
+    raw_context = {}
+    if not (FIRST_PAGE_CN_PATH.exists() and FIRST_PAGE_EN_PATH.exists()):
+        if not CONTEXT_PATH.exists():
+            raise FileNotFoundError(
+                "Either first_page_cn.json + first_page_en.json or context.json must exist."
+            )
+        raw_context = json.loads(CONTEXT_PATH.read_text(encoding="utf-8-sig"))
     context = resolve_render_context(raw_context)
     OUTPUT_PATH.write_text(build_html(context), encoding="utf-8")
     print(f"Built {OUTPUT_PATH}")

@@ -2,7 +2,7 @@
 
 Static publishing repo for two interview-facing pages:
 
-- `agent-eval/`: agent evaluation showcase
+- `agent-eval/`: agent evaluation showcase, primarily edited via `first_page_cn.json` and `first_page_en.json`
 - `agent-dev/`: Task Forge v2 showcase
 
 The root `index.html` is generated from `index.json` by the top-level

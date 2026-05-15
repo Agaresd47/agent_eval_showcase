@@ -1,45 +1,45 @@
 {
   "site": {
-    "title": "Agent Showcase",
-    "subtitle": "Agent evaluation and agent development case studies",
-    "summary": "A compact entry point for two related interview showcases: one focuses on evaluating agent behavior under information gaps and execution constraints, the other focuses on building a task-authoring pipeline that turns messy real scripts into reusable eval tasks."
+    "title": "Agent 项目展示",
+    "subtitle": "Agent 评测与 Agent 开发两个项目的统一入口",
+    "summary": "这是一个面向面试展示的静态入口页，汇总了两个相关项目：一个聚焦于 Agent 在信息缺口、CLI 执行约束和任务委派场景下的评测设计；另一个聚焦于把真实开发中的脏脚本自动转化为可复用评测任务的 authoring pipeline。"
   },
   "highlights": [
     {
-      "label": "Projects",
+      "label": "项目数",
       "value": "2"
     },
     {
-      "label": "Focus",
+      "label": "方向",
       "value": "Eval + Dev"
     },
     {
-      "label": "Format",
-      "value": "Static Pages"
+      "label": "形式",
+      "value": "静态展示页"
     }
   ],
   "projects": [
     {
       "slug": "agent-eval",
-      "title": "Agent Evaluation Showcase",
-      "eyebrow": "Evaluation",
-      "description": "A bilingual showcase covering information-gap handling, CLI execution discipline, and task delegation evaluation. The page consolidates rubric design, judge caveats, failure taxonomies, and concrete model comparisons.",
+      "title": "Agent 评测展示",
+      "eyebrow": "评测",
+      "description": "这个页面展示了信息缺口处理、CLI 执行纪律和任务委派三类 Agent 评测。重点不只是分数本身，还包括 rubric 设计、judge 偏差、失败模式和后续改进方向。",
       "points": [
-        "Three evaluation tracks with detailed task framing",
-        "Human-readable failure taxonomies and improvement paths",
-        "Built from existing experiment results and audit artifacts"
+        "三条评测主线，任务设计与条件写得较完整",
+        "包含失败模式归类、judge caveat 和解读框架",
+        "基于已有实验结果和人工审计材料整理而成"
       ],
       "href": "./agent-eval/"
     },
     {
       "slug": "agent-dev",
       "title": "Task Forge v2",
-      "eyebrow": "Development",
-      "description": "An agent-development showcase for a multi-step authoring pipeline that mines dirty Python scripts, routes them through critics, and assigns deterministic task buckets for downstream evaluation.",
+      "eyebrow": "开发",
+      "description": "这个页面展示的是一个多步骤 task-authoring pipeline：它从真实 Python 脏脚本中抽取 source，经过 critic 审查与规则层校准，最终输出可复用的评测任务。",
       "points": [
-        "Workflow scaffolding plus four parallel critics",
-        "Deterministic anchor/supporting/reject calibration",
-        "Artifact audit, runtime telemetry, and ablation evidence"
+        "workflow scaffolding 加四个并行 critic",
+        "deterministic 的 anchor/supporting/reject 分桶",
+        "补了 artifact audit、runtime telemetry 和 ablation 证据"
       ],
       "href": "./agent-dev/"
     }

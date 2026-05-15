@@ -59,7 +59,7 @@ def build_cards(projects: list[dict]) -> str:
               <h2>{html.escape(project['title'])}</h2>
               <p>{html.escape(project['description'])}</p>
               <ul>{points}</ul>
-              <a class="cta" href="{html.escape(project['href'])}">Open showcase</a>
+              <a class="cta" href="{html.escape(project['href'])}">进入页面</a>
             </article>
             """.strip()
         )
@@ -82,7 +82,7 @@ def render_index(context: dict) -> str:
     subtitle = html.escape(site["subtitle"])
     summary = html.escape(site["summary"])
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -288,7 +288,7 @@ def render_index(context: dict) -> str:
 <body>
   <main class="shell">
     <section class="hero">
-      <div class="kicker">Interview Showcase</div>
+      <div class="kicker">面试作品集入口</div>
       <h1>{title}</h1>
       <p class="subtitle">{subtitle}</p>
       <p class="summary">{summary}</p>
@@ -296,7 +296,7 @@ def render_index(context: dict) -> str:
     </section>
     <section class="grid">{cards}</section>
     <footer>
-      Built from <code>index.json</code> via <code>build_showcase.py</code>. Subpages are synced from the sibling <code>Agent_info_flow</code> workspace.
+      根入口页由 <code>index.json</code> 和 <code>build_showcase.py</code> 生成；两个子页面从旁边的 <code>Agent_info_flow</code> 工作区同步而来。
     </footer>
   </main>
 </body>

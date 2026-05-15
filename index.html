@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agent Showcase</title>
+  <title>Agent 项目展示</title>
   <style>
     :root {
       --bg: #f4efe5;
@@ -205,39 +205,39 @@
 <body>
   <main class="shell">
     <section class="hero">
-      <div class="kicker">Interview Showcase</div>
-      <h1>Agent Showcase</h1>
-      <p class="subtitle">Agent evaluation and agent development case studies</p>
-      <p class="summary">A compact entry point for two related interview showcases: one focuses on evaluating agent behavior under information gaps and execution constraints, the other focuses on building a task-authoring pipeline that turns messy real scripts into reusable eval tasks.</p>
+      <div class="kicker">面试作品集入口</div>
+      <h1>Agent 项目展示</h1>
+      <p class="subtitle">Agent 评测与 Agent 开发两个项目的统一入口</p>
+      <p class="summary">这是一个面向面试展示的静态入口页，汇总了两个相关项目：一个聚焦于 Agent 在信息缺口、CLI 执行约束和任务委派场景下的评测设计；另一个聚焦于把真实开发中的脏脚本自动转化为可复用评测任务的 authoring pipeline。</p>
       <div class="stats"><div class="stat">
           <div class="value">2</div>
-          <div class="label">Projects</div>
+          <div class="label">项目数</div>
         </div>
 <div class="stat">
           <div class="value">Eval + Dev</div>
-          <div class="label">Focus</div>
+          <div class="label">方向</div>
         </div>
 <div class="stat">
-          <div class="value">Static Pages</div>
-          <div class="label">Format</div>
+          <div class="value">静态展示页</div>
+          <div class="label">形式</div>
         </div></div>
     </section>
     <section class="grid"><article class="card">
-              <div class="eyebrow">Evaluation</div>
-              <h2>Agent Evaluation Showcase</h2>
-              <p>A bilingual showcase covering information-gap handling, CLI execution discipline, and task delegation evaluation. The page consolidates rubric design, judge caveats, failure taxonomies, and concrete model comparisons.</p>
-              <ul><li>Three evaluation tracks with detailed task framing</li><li>Human-readable failure taxonomies and improvement paths</li><li>Built from existing experiment results and audit artifacts</li></ul>
-              <a class="cta" href="./agent-eval/">Open showcase</a>
+              <div class="eyebrow">评测</div>
+              <h2>Agent 评测展示</h2>
+              <p>这个页面展示了信息缺口处理、CLI 执行纪律和任务委派三类 Agent 评测。重点不只是分数本身，还包括 rubric 设计、judge 偏差、失败模式和后续改进方向。</p>
+              <ul><li>三条评测主线，任务设计与条件写得较完整</li><li>包含失败模式归类、judge caveat 和解读框架</li><li>基于已有实验结果和人工审计材料整理而成</li></ul>
+              <a class="cta" href="./agent-eval/">进入页面</a>
             </article>
 <article class="card">
-              <div class="eyebrow">Development</div>
+              <div class="eyebrow">开发</div>
               <h2>Task Forge v2</h2>
-              <p>An agent-development showcase for a multi-step authoring pipeline that mines dirty Python scripts, routes them through critics, and assigns deterministic task buckets for downstream evaluation.</p>
-              <ul><li>Workflow scaffolding plus four parallel critics</li><li>Deterministic anchor/supporting/reject calibration</li><li>Artifact audit, runtime telemetry, and ablation evidence</li></ul>
-              <a class="cta" href="./agent-dev/">Open showcase</a>
+              <p>这个页面展示的是一个多步骤 task-authoring pipeline：它从真实 Python 脏脚本中抽取 source，经过 critic 审查与规则层校准，最终输出可复用的评测任务。</p>
+              <ul><li>workflow scaffolding 加四个并行 critic</li><li>deterministic 的 anchor/supporting/reject 分桶</li><li>补了 artifact audit、runtime telemetry 和 ablation 证据</li></ul>
+              <a class="cta" href="./agent-dev/">进入页面</a>
             </article></section>
     <footer>
-      Built from <code>index.json</code> via <code>build_showcase.py</code>. Subpages are synced from the sibling <code>Agent_info_flow</code> workspace.
+      根入口页由 <code>index.json</code> 和 <code>build_showcase.py</code> 生成；两个子页面从旁边的 <code>Agent_info_flow</code> 工作区同步而来。
     </footer>
   </main>
 </body>
